@@ -22,7 +22,7 @@ RNG = np.random.default_rng(42)
 
 # Simulate joint [image_latent; mask_latent] vectors in R^{2048}
 D = 2048   # 2 x (4 x 8 x 8 x 4) after spatial pooling
-N = 100    # samples per set
+N = 200    # samples per set (must be > k=128 for PCA to be well-defined)
 
 ref   = RNG.standard_normal((N, D)).astype(np.float32)
 close = RNG.standard_normal((N, D)).astype(np.float32) + 0.2
@@ -46,8 +46,8 @@ print("Ordering check: MID_self < MID_close < MID_far  ✓")
 
 # --- Decomposed MID: shift mask half only ------------------------------------
 print("\n--- Decomposed MID ---")
-mask_only_shift = RNG.standard_normal((N, D)).astype(np.float32)
-mask_only_shift[:, D // 2:] += 3.0    # shift only the mask half
+mask_only_shift = ref.copy()             # start from reference (same image half)
+mask_only_shift[:, D // 2:] += 3.0     # shift only the mask half
 
 ref_proj  = proj.transform(ref)
 cand_proj = proj.transform(mask_only_shift)
