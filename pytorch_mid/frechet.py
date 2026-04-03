@@ -12,7 +12,6 @@ This equals the squared 2-Wasserstein distance W_2^2 between the two Gaussians
 """
 
 import numpy as np
-import torch
 from scipy import linalg
 
 
