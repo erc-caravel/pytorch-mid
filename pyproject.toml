@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "pytorch-mid"
+version = "0.1.0"
+description = "MID: Medical segmentation-Informed Divergence — a Fréchet-type distributional metric for 3D medical image segmentation"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.9"
+authors = [
+  { name = "SanBast" },
+]
+keywords = ["medical imaging", "segmentation", "evaluation", "Fréchet distance", "FID", "MID"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Scientific/Engineering :: Medical Science Apps.",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+]
+dependencies = [
+  "numpy>=1.22",
+  "scipy>=1.9",
+  "scikit-learn>=1.1",
+]
+
+[project.optional-dependencies]
+torch = ["torch>=1.12"]
+dev   = ["pytest>=7", "pytest-cov"]
+
+[project.scripts]
+pytorch-mid = "pytorch_mid.__main__:main"
+
+[project.urls]
+"Source" = "https://github.com/SanBast/pytorch-mid"
+"Bug Tracker" = "https://github.com/SanBast/pytorch-mid/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pytorch_mid*"]
