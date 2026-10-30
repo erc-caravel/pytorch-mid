@@ -2,6 +2,8 @@
 
 **MID: Medical segmentation-Informed Divergence**
 
+**Paper:** [arXiv:2610.17354](https://arxiv.org/abs/2610.17354) (NeurIPS 2026)
+
 A Fréchet-type distributional metric for 3D medical image segmentation, analogous to [FID](https://github.com/mseitzer/pytorch-fid) for generative models but purpose-built for the segmentation setting.
 
 MID operates in the joint latent space of a pretrained 3D medical VAE (MAISI), capturing both appearance fidelity and anatomical shape priors in a single scalar divergence.
