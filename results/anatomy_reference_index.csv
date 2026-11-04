@@ -1,0 +1,49 @@
+region,organ,modality,mid_mean,mid_std
+Abdomen,liver,CT,0.0150762,0.0018819
+Abdomen,liver tumour,CT,0.0177102,0.0018900
+Abdomen,spleen,CT,0.0212584,0.0021991
+Abdomen,stomach,CT,0.0159767,0.0017276
+Abdomen,pancreas,CT,0.0106114,0.0009459
+Abdomen,pancreatic cancer,CT,0.00796713,0.0004852
+Abdomen,kidney L,CT,0.0162932,0.0017907
+Abdomen,kidney R,CT,0.0159206,0.0022591
+Abdomen,adrenal gl. L,CT,0.00541287,0.0005489
+Abdomen,adrenal gl. R,CT,0.00529062,0.0005379
+Abdomen,colon,CT,0.0116252,0.0011977
+Abdomen,small bowel,CT,0.00654627,0.0006173
+Abdomen,duodenum,CT,0.0056659,0.0006748
+Abdomen,gallbladder,CT,0.00544271,0.0005322
+Abdomen,portal/splenic vein,CT,0.00534416,0.0005258
+Abdomen,inf. vena cava,CT,0.00602578,0.0006187
+Head and neck,brain,CT,0.00569153,0.0010229
+Head and neck,thyroid,CT,0.00535287,0.0005579
+Head and neck,trachea,CT,0.00595359,0.0005281
+Head and neck,carotid L,CT,0.00577388,0.0006136
+Head and neck,carotid R,CT,0.00537231,0.0004583
+Head and neck,brachioceph. trunk,CT,0.00532401,0.0004606
+Head and neck,brachioceph. vein L,CT,0.00546755,0.0006024
+Head and neck,brachioceph. vein R,CT,0.00530555,0.0006286
+Head and neck,subclavian L,CT,0.00559336,0.0007864
+Head and neck,subclavian R,CT,0.00536433,0.0004219
+Pelvis,ur. bladder,CT,0.00582787,0.0005139
+Pelvis,prostate,MRI,0.00521214,0.0003507
+Pelvis,prostate PZ,MRI,0.059695,0.0050970
+Pelvis,prostate CG,MRI,0.0674765,0.0195808
+Pelvis,iliac art. L,CT,0.0056425,0.0004506
+Pelvis,iliac art. R,CT,0.00553845,0.0005416
+Pelvis,iliac vein L,CT,0.00577604,0.0007373
+Pelvis,spinal cord,CT,0.0065969,0.0006088
+Chest,lung UL L,CT,0.00635228,0.0007166
+Chest,lung UL R,CT,0.00582866,0.0005172
+Chest,lung LL L,CT,0.00638022,0.0006686
+Chest,lung LL R,CT,0.00647132,0.0007067
+Chest,lung ML R,CT,0.00575792,0.0005357
+Chest,esophagus,CT,0.00617678,0.0006420
+Chest,heart,CT,0.00591777,0.0004588
+Chest,atrial app. L,CT,0.00519737,0.0007032
+Chest,aorta,CT,0.00660919,0.0006958
+Chest,sup. vena cava,CT,0.00557212,0.0005638
+Chest,pulmonary vein,CT,0.00545302,0.0005676
+Chest,myocardium (ACDC),MRI,0.00430798,0.0005718
+Chest,LV (ACDC),MRI,0.00440749,0.0006687
+Chest,RV (ACDC),MRI,0.00508677,0.0008938
