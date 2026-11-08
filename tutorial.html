@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MID Code Tutorial</title>
+<meta name="description" content="Score a segmentation model with MID and pytorch-mid: encode scans with MedSigLIP, fit the projection on a reference set, compare models, and check the image-mask correspondence.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400;1,500;1,600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+:root{
+  /* Layout: one long explainer column; each live figure is a 3-D stage with a control rail beside it (stacked on phones). Single dark world, after 3Blue1Brown. */
+  --bg:#0f1216; --panel:#151a21; --panel-2:#1b2129; --line:#29313c; --grid:#222a34;
+  --ink:#ecebe4; --ink-2:#c3c6cc; --muted:#8e96a1; --faint:#5f6874;
+  --ref:#58C4DD; --cand:#F4D345; --mean:#5CD0B3; --cov:#FC6255;
+  --img:#9CA8FF; --mask:#F0AC5F; --corr:#E35BD8;
+  --hn:#C38AF0; --chest:#FC6255; --abd:#E8C11C; --pelvis:#58C4DD;
+  --f-display:"STIX Two Text","STIX Two Math","Times New Roman",serif;
+  --f-body:"Source Serif 4","Source Serif Pro",Georgia,serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --s-1:13px; --s0:15px; --s1:17.5px; --s2:22px; --s3:30px; --s4:44px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:var(--s1);line-height:1.62;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+a{color:var(--ref);text-decoration-thickness:1px;text-underline-offset:3px}
+a:hover{color:var(--ink)}
+:focus-visible{outline:2px solid var(--cand);outline-offset:3px;border-radius:3px}
+.wrap{max-width:1140px;margin:0 auto}
+.prose{max-width:66ch}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;text-wrap:balance;margin:0;letter-spacing:.005em}
+h2{font-size:var(--s4);line-height:1.08}
+h2 em,h1 em{font-style:italic;color:var(--cand)}
+h3{font-size:var(--s2);line-height:1.25}
+p{margin:0}
+.eyebrow{font-family:var(--f-mono);font-size:var(--s-1);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.mono{font-family:var(--f-mono)}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.c-ref{color:var(--ref)} .c-cand{color:var(--cand)} .c-mean{color:var(--mean)} .c-cov{color:var(--cov)}
+.c-img{color:var(--img)} .c-mask{color:var(--mask)} .c-corr{color:var(--corr)} .c-muted{color:var(--muted)}
+
+section{padding-block:72px 24px;display:grid;gap:22px}
+section + section{border-top:1px solid var(--line)}
+.lede{font-size:var(--s2);line-height:1.5;color:var(--ink-2);max-width:60ch}
+.note{font-size:var(--s0);color:var(--muted);max-width:72ch}
+.note strong{color:var(--ink-2);font-weight:600}
+
+
+.tut-head{display:grid;gap:18px;padding-block:40px 28px}
+.back{font-family:var(--f-mono);font-size:13px;text-decoration:none;justify-self:start}
+.tut-head h1{font-size:clamp(40px,6vw,64px);line-height:1.02}
+.tut-head h1 em{font-style:italic;color:var(--cand)}
+.code-cta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;max-width:900px}
+.repo{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:16px;align-items:center;padding:16px 18px;background:var(--panel);border:1px solid var(--line);border-radius:10px;color:var(--ink);text-decoration:none}
+.repo:hover{border-color:var(--ref);color:var(--ink)}
+.repo-t{display:grid;gap:2px;min-width:0}
+.repo-t b{font-family:var(--f-mono);font-weight:500;font-size:15px;overflow-wrap:anywhere}
+.repo-t span{font-size:var(--s0);color:var(--muted)}
+.repo-go{font-size:22px;color:var(--ref)}
+.toc{display:flex;flex-wrap:wrap;gap:8px}
+.toc a{font-family:var(--f-mono);font-size:12.5px;color:var(--ink-2);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:5px 12px;background:var(--panel)}
+.toc a:hover{border-color:var(--cand);color:var(--ink)}
+.toc b{color:var(--cand);font-weight:500;margin-right:6px}
+.tut-steps{list-style:none;margin:0;padding:28px 0 0;display:grid;gap:44px;border-top:1px solid var(--line)}
+.tut-step{display:grid;grid-template-columns:44px minmax(0,1fr);gap:18px;scroll-margin-top:20px}
+.tut-n{font-family:var(--f-display);font-style:italic;font-size:36px;line-height:1;color:var(--cand)}
+.tut-b{display:grid;gap:12px;min-width:0}
+.tut-b h2{font-size:var(--s3);line-height:1.15}
+.tut-b p{max-width:72ch;color:var(--ink-2)}
+.tut-b code,.note code{font-family:var(--f-mono);font-size:.86em;color:var(--ink)}
+.btn-sm{font-family:var(--f-mono);font-size:12px;color:var(--ink);background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:4px 9px;cursor:pointer}
+.btn-sm:hover{border-color:var(--cand)}
+.code{background:var(--panel);border:1px solid var(--line);border-radius:8px;min-width:0;overflow:hidden}
+.code-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:5px 8px 5px 14px;border-bottom:1px solid var(--line);font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.code pre{margin:0;padding:14px 16px;overflow-x:auto;font-family:var(--f-mono);font-size:12.5px;line-height:1.62;color:var(--ink-2);tab-size:4}
+.code pre code{font-size:inherit;color:inherit}
+.tk-c{color:var(--muted);font-style:italic} .tk-s{color:var(--mean)} .tk-k{color:var(--hn)} .tk-n{color:var(--cand)} .tk-f{color:var(--ref)}
+footer{border-top:1px solid var(--line);margin-top:56px;padding-block:28px 48px;display:grid;gap:10px;font-size:var(--s0);color:var(--muted)}
+@media (max-width:700px){ .code-cta{grid-template-columns:minmax(0,1fr)} }
+@media (max-width:480px){ .tut-step{grid-template-columns:minmax(0,1fr);gap:6px} .tut-n{font-size:28px} .repo{grid-template-columns:auto minmax(0,1fr)} .repo-go{display:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="tut-head">
+  <a class="back" href="index.html">&larr; MID project page</a>
+  <div class="eyebrow">Code tutorial &middot; pytorch-mid</div>
+  <h1>Score your own model <em>in seven steps</em></h1>
+  <p class="lede">The package pytorch-mid computes MID from joint image&ndash;mask vectors. It needs NumPy, SciPy and scikit-learn. Steps 2 and 3 build the vectors with MedSigLIP. The other steps use the package only.</p>
+  <div class="code-cta">
+    <a class="repo" href="https://github.com/erc-caravel/pytorch-mid" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" width="28" height="28" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span class="repo-t"><b>erc-caravel/pytorch-mid</b><span>Reference implementation &middot; Python &ge; 3.9 &middot; Apache-2.0</span></span><span class="repo-go" aria-hidden="true">&rarr;</span></a>
+    <a class="repo" href="https://arxiv.org/abs/2610.17354" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M6 3h8l4 4v14H6zM14 3v4h4M9 12h6M9 16h6"/></svg><span class="repo-t"><b>Paper</b><span>arXiv 2610.17354 &middot; NeurIPS 2026</span></span><span class="repo-go" aria-hidden="true">&rarr;</span></a>
+  </div>
+  <nav class="toc" aria-label="Steps"><a href="#install"><b>1</b>Install</a><a href="#encode"><b>2</b>Encode with the paper's settings</a><a href="#sets"><b>3</b>Build the two sets</a><a href="#score"><b>4</b>Score</a><a href="#compare"><b>5</b>Compare models at one size</a><a href="#decompose"><b>6</b>Check the image–mask correspondence</a><a href="#estimator"><b>7</b>Optional: the paper's estimator</a></nav>
+</header>
+<ol class="tut-steps">
+  <li class="tut-step" id="install"><span class="tut-n">1</span><div class="tut-b"><h2>Install</h2><p>Install the package from GitHub. The encoder in step 2 needs PyTorch, Transformers and NiBabel. MedSigLIP is a gated model: accept its terms on its <a href="https://huggingface.co/google/medsiglip-448" target="_blank" rel="noopener">Hugging Face page</a>, then log in.</p><div class="code"><div class="code-bar"><span>terminal</span><button class="btn-sm copy" type="button">Copy</button></div><pre><code data-lang="sh">pip install git+https://github.com/erc-caravel/pytorch-mid
+pip install torch transformers nibabel   # for the encoder in step 2
+hf auth login                            # MedSigLIP is a gated model</code></pre></div></div></li>
+  <li class="tut-step" id="encode"><span class="tut-n">2</span><div class="tut-b"><h2>Encode with the paper's settings</h2><p>The package takes feature vectors and has no encoder. This file renders 16 axial slices per volume, encodes each slice with MedSigLIP and averages the slice embeddings. Each image and foreground class gives one vector of 2304 values, image first. Its renderers give the same pixels as the paper's code.</p><div class="code"><div class="code-bar"><span>mid_encode.py</span><button class="btn-sm copy" type="button">Copy</button></div><pre><code data-lang="py">import numpy as np
+import nibabel as nib
+import torch
+from transformers import SiglipImageProcessor, SiglipVisionModel
+
+MODEL = &quot;google/medsiglip-448&quot;
+CT_WINDOWS = [(-1024, 1024), (-135, 215), (0, 80)]
+
+
+def load_medsiglip(device=&quot;cuda&quot;):
+    proc = SiglipImageProcessor.from_pretrained(MODEL)
+    model = SiglipVisionModel.from_pretrained(MODEL, dtype=torch.float16).to(device).eval()
+    return proc, model
+
+
+def render_ct(s):
+    &quot;&quot;&quot;2-D HU slice -&gt; (3, H, W) uint8, one HU window per channel.&quot;&quot;&quot;
+    return np.stack([np.round((np.clip(s, lo, hi) - lo) / (hi - lo) * 255) for lo, hi in CT_WINDOWS]).astype(np.uint8)
+
+
+def render_mri(s):
+    &quot;&quot;&quot;2-D MRI slice -&gt; (3, H, W) uint8, min-max scaled.&quot;&quot;&quot;
+    lo, hi = s.min(), s.max()
+    g = np.round((s - lo) / (hi - lo) * 255) if hi &gt; lo else np.zeros_like(s)
+    return np.repeat(g[None].astype(np.uint8), 3, axis=0)
+
+
+def render_mask(s):
+    &quot;&quot;&quot;2-D binary mask -&gt; (3, H, W) uint8, white on black.&quot;&quot;&quot;
+    return np.repeat((s[None] == 1).astype(np.uint8) * 255, 3, axis=0)
+
+
+def slice_ids(depth, n=16):
+    return np.arange(depth) if depth &lt;= n else np.linspace(0, depth - 1, n, dtype=int)
+
+
+@torch.no_grad()
+def embed(volume, render, proc, model):
+    &quot;&quot;&quot;Mean of the l2-normalised MedSigLIP embeddings of 16 axial slices -&gt; (1152,).&quot;&quot;&quot;
+    dev = model.device
+    x = torch.from_numpy(np.stack([render(volume[:, :, i]) for i in slice_ids(volume.shape[2])])).to(dev)
+    px = proc(images=x, return_tensors=&quot;pt&quot;, device=dev)[&quot;pixel_values&quot;].to(model.dtype)
+    e = model(pixel_values=px).pooler_output
+    e = e / e.norm(dim=-1, keepdim=True)
+    return e.float().mean(0).cpu().numpy()
+
+
+def joint_vectors(image_path, label_path, classes, proc, model, modality=&quot;CT&quot;, clip=None):
+    &quot;&quot;&quot;One [image || mask] vector (2304,) per foreground class of one case.&quot;&quot;&quot;
+    img = nib.load(image_path).get_fdata(dtype=np.float32)
+    lab = nib.load(label_path).get_fdata(dtype=np.float32)
+    if clip is not None:
+        img = np.clip(img, *clip)
+    e_img = embed(img, render_ct if modality == &quot;CT&quot; else render_mri, proc, model)
+    return {c: np.concatenate([e_img, embed((lab == c).astype(np.float32), render_mask, proc, model)])
+            for c in classes if (lab == c).any()}</code></pre></div><p class="note">For abdominal CT, the paper clips intensities to [&minus;57, 200] HU before it applies the three windows. Pass <code>clip=(-57, 200)</code> to reproduce its numbers.</p></div></li>
+  <li class="tut-step" id="sets"><span class="tut-n">3</span><div class="tut-b"><h2>Build the two sets</h2><p>The reference set holds images with expert masks. The candidate set holds the test images with the model's masks. The two sets need no common cases. Use one anatomy per set.</p><div class="code"><div class="code-bar"><span>encode_sets.py</span><button class="btn-sm copy" type="button">Copy</button></div><pre><code data-lang="py">import glob
+import numpy as np
+from mid_encode import load_medsiglip, joint_vectors
+
+proc, model = load_medsiglip()
+LIVER = 1  # label value of the anatomy in your label maps
+
+
+def encode_set(image_dir, label_dir, modality=&quot;CT&quot;):
+    images = sorted(glob.glob(f&quot;{image_dir}/*.nii.gz&quot;))
+    labels = sorted(glob.glob(f&quot;{label_dir}/*.nii.gz&quot;))
+    vecs = [joint_vectors(i, l, [LIVER], proc, model, modality, clip=(-57, 200))
+            for i, l in zip(images, labels)]
+    return np.stack([v[LIVER] for v in vecs if LIVER in v])
+
+
+ref = encode_set(&quot;reference/images&quot;, &quot;reference/labels&quot;)   # expert masks
+cand = encode_set(&quot;test/images&quot;, &quot;model_a/predictions&quot;)     # predicted masks
+np.save(&quot;ref.npy&quot;, ref)
+np.save(&quot;cand_model_a.npy&quot;, cand)</code></pre></div></div></li>
+  <li class="tut-step" id="score"><span class="tut-n">4</span><div class="tut-b"><h2>Score</h2><p>Fit the PCA on the reference set only, and keep it for every candidate set. A lower MID means that the candidate distribution is closer to the reference. With k = 128, the reference needs at least 128 vectors. Steps 4 to 7 run in one Python session.</p><div class="code"><div class="code-bar"><span>python</span><button class="btn-sm copy" type="button">Copy</button></div><pre><code data-lang="py">import numpy as np
+from pytorch_mid import PCAProjection, compute_mid_from_latents
+
+ref, cand = np.load(&quot;ref.npy&quot;), np.load(&quot;cand_model_a.npy&quot;)
+proj = PCAProjection(k=128).fit(ref)   # fit on the reference only
+proj.save(&quot;pca_liver_k128.pkl&quot;)        # reuse it for every candidate set
+print(f&quot;MID = {compute_mid_from_latents(ref, cand, projection=proj):.4f}&quot;)</code></pre></div><div class="code"><div class="code-bar"><span>or from the terminal</span><button class="btn-sm copy" type="button">Copy</button></div><pre><code data-lang="sh">pytorch-mid latents --ref ref.npy --cand cand_model_a.npy --projection pca_liver_k128.pkl</code></pre></div></div></li>
+  <li class="tut-step" id="compare"><span class="tut-n">5</span><div class="tut-b"><h2>Compare models at one size</h2><p>MID depends on the candidate size. Score every model with the same reference, the same projection and the same number of vectors. Between 100 and 250 vectors per model, subsample all models to the smallest size and repeat the draw. MID has no universal scale, so also measure the clean range of the anatomy: the MID between two random halves of the reference.</p><div class="code"><div class="code-bar"><span>python</span><button class="btn-sm copy" type="button">Copy</button></div><pre><code data-lang="py">rng = np.random.default_rng(0)
+cands = {m: np.load(f&quot;cand_{m}.npy&quot;) for m in [&quot;model_a&quot;, &quot;model_b&quot;, &quot;model_c&quot;]}
+n = min(len(c) for c in cands.values())
+for name, c in cands.items():
+    s = [compute_mid_from_latents(ref, c[rng.choice(len(c), n, replace=False)], projection=proj)
+         for _ in range(20)]
+    print(f&quot;{name}: MID = {np.mean(s):.4f} ± {np.std(s):.4f}  (n = {n})&quot;)
+
+# Clean-versus-clean range of this anatomy: MID between random halves of the reference
+floor = []
+for _ in range(20):
+    p = rng.permutation(len(ref))
+    floor.append(compute_mid_from_latents(ref[p[::2]], ref[p[1::2]], projection=proj))
+print(f&quot;clean range: {np.mean(floor):.4f} ± {np.std(floor):.4f}&quot;)</code></pre></div><p class="note">The paper's clean ranges for 48 structures are in <a href="https://github.com/erc-caravel/pytorch-mid/blob/main/results/anatomy_reference_index.csv" target="_blank" rel="noopener">results/anatomy_reference_index.csv</a>.</p></div></li>
+  <li class="tut-step" id="decompose"><span class="tut-n">6</span><div class="tut-b"><h2>Check the image&ndash;mask correspondence</h2><p>Project the image half and the mask half with separate PCAs, then split MID into three terms. A mask can have a plausible shape and still be wrong for its image. Such masks raise the cross term, MID<sub>corr</sub>. Shuffling the pairs shows the effect.</p><div class="code"><div class="code-bar"><span>python</span><button class="btn-sm copy" type="button">Copy</button></div><pre><code data-lang="py">from pytorch_mid.decomposition import compute_mid_decomposed
+
+d = ref.shape[1] // 2                                  # image block size
+pca_img = PCAProjection(k=128).fit(ref[:, :d])
+pca_mask = PCAProjection(k=128).fit(ref[:, d:])
+
+
+def blockwise(x):
+    return np.hstack([pca_img.transform(x[:, :d]), pca_mask.transform(x[:, d:])])
+
+
+parts = compute_mid_decomposed(blockwise(ref), blockwise(cand))
+print(parts[&quot;img&quot;], parts[&quot;mask&quot;], parts[&quot;cross&quot;])     # cross = MID_corr
+
+# Same images, same masks, wrong pairs: only the cross term grows
+wrong = np.hstack([cand[:, :d], cand[rng.permutation(len(cand)), d:]])
+print(compute_mid_decomposed(blockwise(ref), blockwise(wrong))[&quot;cross&quot;])</code></pre></div></div></li>
+  <li class="tut-step" id="estimator"><span class="tut-n">7</span><div class="tut-b"><h2>Optional: the paper's estimator</h2><p>The package estimates each covariance with the empirical estimator. The paper uses Ledoit&ndash;Wolf shrinkage, which has a lower variance for small sets. Use it to compare your scores with the paper's tables.</p><div class="code"><div class="code-bar"><span>python</span><button class="btn-sm copy" type="button">Copy</button></div><pre><code data-lang="py">from sklearn.covariance import LedoitWolf
+from pytorch_mid import frechet_distance
+
+
+def stats_lw(x):
+    return x.mean(axis=0), LedoitWolf().fit(x).covariance_
+
+
+p, q = proj.transform(ref), proj.transform(cand)
+print(f&quot;MID (Ledoit-Wolf) = {frechet_distance(*stats_lw(p), *stats_lw(q)):.4f}&quot;)</code></pre></div></div></li>
+</ol>
+<footer>
+  <p>The functions <code>load_medsiglip</code> and <code>embed</code> of step 2 produced the features of the playground on the main page. Steps 4 to 7 were run with pytorch-mid from GitHub.</p>
+  <p><a href="index.html">&larr; Back to the MID project page</a></p>
+</footer>
+</div>
+<script>
+const PY = new Set("import from as def return for in if else not lambda with and or None True False".split(" "));
+const esc = t => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const RE = /(#[^\n]*)|([fr]?"(?:[^"\\\n]|\\.)*"|[fr]?'(?:[^'\\\n]|\\.)*')|(\b\d+(?:\.\d+)?(?:e-?\d+)?\b)|(\b[A-Za-z_]\w*\b)(?=\s*\()|(\b[A-Za-z_]\w*\b)/g;
+document.querySelectorAll("pre code[data-lang]").forEach(el => {
+  const src = el.textContent, py = el.dataset.lang === "py";
+  let out = "", last = 0;
+  for (const m of src.matchAll(RE)) {
+    out += esc(src.slice(last, m.index)); last = m.index + m[0].length;
+    const t = esc(m[0]);
+    if (m[1] && (m.index === 0 || /\s/.test(src[m.index - 1]))) out += `<span class="tk-c">${t}</span>`;
+    else if (m[2]) out += `<span class="tk-s">${t}</span>`;
+    else if (m[3] && py) out += `<span class="tk-n">${t}</span>`;
+    else if (m[4] && py && !PY.has(m[0])) out += `<span class="tk-f">${t}</span>`;
+    else if ((m[4] || m[5]) && py && PY.has(m[0])) out += `<span class="tk-k">${t}</span>`;
+    else out += t;
+  }
+  el.innerHTML = out + esc(src.slice(last));
+});
+document.querySelectorAll(".code .copy").forEach(b => b.addEventListener("click", async () => {
+  const c = b.closest(".code").querySelector("code");
+  try { await navigator.clipboard.writeText(c.textContent); b.textContent = "Copied"; }
+  catch { const r = document.createRange(); r.selectNodeContents(c); const s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = "Selected"; }
+  setTimeout(() => { b.textContent = "Copy"; }, 1600);
+}));
+</script>
+</body>
+</html>
