@@ -2,11 +2,16 @@
 
 **MID: Mask-Image Distributional Divergence for Evaluating Medical Image Segmentation**
 
-NeurIPS 2026 (poster). Paper: [arXiv:2610.17354](https://arxiv.org/abs/2610.17354).
+NeurIPS 2026 (poster). Paper: [arXiv:2610.17354](https://arxiv.org/abs/2610.17354). Project page: [erc-caravel.github.io/pytorch-mid](https://erc-caravel.github.io/pytorch-mid/). Code tutorial: [tutorial.html](https://erc-caravel.github.io/pytorch-mid/tutorial.html).
 
 MID is a distribution-level metric for medical image segmentation. It compares a reference set of image-mask pairs with a candidate set of image-mask pairs. The reference set holds ground-truth masks. The candidate set holds predicted masks. The two sets need no sample-wise correspondence. Ground-truth masks are thus needed only for the reference set.
 
 MID uses the joint distribution of images and masks. A mask can have a plausible shape and still be wrong for its image. A joint score detects this case.
+
+<p align="center">
+  <a href="https://erc-caravel.github.io/pytorch-mid/"><img src="assets/mid_playground.gif" width="720" alt="Animated 3-D view of liver CT masks from AMOS22, dilated from clean to extreme. The Gaussian of the corrupted masks moves away from the Gaussian of the expert masks, and MID rises."></a>
+</p>
+<p align="center"><sub>Liver, CT (AMOS22). The masks are dilated from clean to extreme. The candidate distribution (yellow) moves away from the reference distribution (blue), and MID rises. MID is scaled per organ, with a maximum of 1. The <a href="https://erc-caravel.github.io/pytorch-mid/">project page</a> shows other organs and corruptions.</sub></p>
 
 ## Method
 
@@ -42,7 +47,7 @@ The package needs Python 3.9 or later, NumPy, SciPy and scikit-learn.
 
 ## Input features
 
-The package computes MID from pre-extracted joint feature vectors. It does not include an encoder. The paper uses MedSigLIP (`google/medsiglip-448`) with the settings below. Use the same settings for the reference set and for every candidate set.
+The package computes MID from pre-extracted joint feature vectors. It does not include an encoder. The paper uses MedSigLIP (`google/medsiglip-448`) with the settings below. Use the same settings for the reference set and for every candidate set. The [code tutorial](https://erc-caravel.github.io/pytorch-mid/tutorial.html) gives an encoder with these settings.
 
 | Setting | Value |
 | --- | --- |
@@ -155,7 +160,7 @@ The [`results`](results) folder holds the values behind three figures of the pap
 python examples/random_vectors.py
 ```
 
-The notebook [`examples/mid_demo.ipynb`](examples/mid_demo.ipynb) shows the same steps.
+The notebook [`examples/mid_demo.ipynb`](examples/mid_demo.ipynb) shows the same steps. The [code tutorial](https://erc-caravel.github.io/pytorch-mid/tutorial.html) shows the full path from NIfTI files to a score.
 
 ## Citation
 
